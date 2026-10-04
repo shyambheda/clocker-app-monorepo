@@ -1,0 +1,20 @@
+{
+  "name": "@clocker/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.next.json": "./tsconfig.next.json",
+    "./eslint/base": "./eslint/base.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint-plugin-security": "^4.2.0",
+    "globals": "^17.13.0",
+    "typescript-eslint": "^8.71.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9.39.0"
+  }
+}
