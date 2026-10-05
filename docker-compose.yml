@@ -1,0 +1,120 @@
+# Local development stack: `docker compose up --build`
+#   web    http://localhost:3000   (customers: /portal, end users: /panel)
+#   admin  http://localhost:3001   (platform staff)
+#   api    http://localhost:4000
+#   worker (background jobs, no port)
+#   redis  localhost:6379          (cache, rate limits, job queue)
+# There is no local Postgres: development uses your Neon `dev` branch (DATABASE_URL in .env).
+# Ports are bound to 127.0.0.1 so nothing is exposed to your local network.
+
+name: clocker
+
+x-env-file: &env-file
+  env_file:
+    - path: .env
+      required: false
+
+x-api-build: &api-build
+  context: .
+  dockerfile: apps/api/Dockerfile
+  target: dev
+
+x-api-volumes: &api-volumes
+  - ./apps/api/src:/repo/apps/api/src
+  - ./packages/shared/src:/repo/packages/shared/src
+
+services:
+  redis:
+    image: redis:8-alpine
+    # noeviction: Redis must never silently drop queued jobs under memory pressure.
+    # appendonly: queued and scheduled jobs survive a Redis restart.
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:-devpassword}
+      - --maxmemory-policy
+      - noeviction
+      - --appendonly
+      - 'yes'
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:-devpassword}
+    ports:
+      - 127.0.0.1:6379:6379
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    <<: *env-file
+    build: *api-build
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 4000
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devpassword}@redis:6379
+    ports:
+      - 127.0.0.1:4000:4000
+    volumes: *api-volumes
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  worker:
+    <<: *env-file
+    build: *api-build
+    command: ['pnpm', '--filter', '@clocker/api', 'dev:worker:docker']
+    environment:
+      NODE_ENV: development
+      REDIS_URL: redis://:${REDIS_PASSWORD:-devpassword}@redis:6379
+    volumes: *api-volumes
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  web:
+    <<: *env-file
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: dev
+    environment:
+      NODE_ENV: development
+      API_INTERNAL_URL: http://api:4000
+      # Reliable file watching on Docker Desktop (macOS/Windows) bind mounts.
+      WATCHPACK_POLLING: 'true'
+    ports:
+      - 127.0.0.1:3000:3000
+    volumes:
+      - ./apps/web/app:/repo/apps/web/app
+      - ./apps/web/components:/repo/apps/web/components
+      - ./apps/web/public:/repo/apps/web/public
+      - ./packages/shared/src:/repo/packages/shared/src
+    depends_on:
+      - api
+
+  admin:
+    <<: *env-file
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      target: dev
+    environment:
+      NODE_ENV: development
+      API_INTERNAL_URL: http://api:4000
+      WATCHPACK_POLLING: 'true'
+    ports:
+      - 127.0.0.1:3001:3001
+    volumes:
+      - ./apps/admin/app:/repo/apps/admin/app
+      - ./apps/admin/components:/repo/apps/admin/components
+      - ./apps/admin/public:/repo/apps/admin/public
+      - ./packages/shared/src:/repo/packages/shared/src
+    depends_on:
+      - api
+
+volumes:
+  redis-data:

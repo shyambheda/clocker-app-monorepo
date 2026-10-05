@@ -1,0 +1,7 @@
+@baseUrl = http://localhost:4000
+
+### Liveness: expect 200 and {"status":"ok","time":"...Z"}
+GET {{baseUrl}}/health/live
+
+### Unknown route: expect 404
+GET {{baseUrl}}/does-not-exist

@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Supply-chain hardening
+# Only these packages may run install scripts. Everything else is blocked.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver
+
+# Don't install a version until it has been public for 24h. Most malicious
+# releases are caught and pulled within hours of publishing.
+minimumReleaseAge: 1440
+
+# Fail the install when peer dependencies don't match.
+strictPeerDependencies: true
