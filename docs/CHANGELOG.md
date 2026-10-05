@@ -2,7 +2,7 @@
 
 Entries are added when a phase is signed off and merged.
 
-## Phase 0: Monorepo, Docker, docs foundation (awaiting sign-off)
+## Phase 0: Monorepo, Docker, docs foundation (2026-10-05)
 
 ### Added
 
@@ -13,6 +13,10 @@ Entries are added when a phase is signed off and merged.
 - Multi-stage Dockerfiles (dev and runtime targets) and Docker Compose for the full local stack.
 - Railway config-as-code for `api`, `worker`, `web`, `admin`.
 - Documentation structure, decision records, roadmap, and the phase loop.
+
+### Fixed
+
+- Docker dev containers no longer print `.env not found` (they use `dev:docker` scripts; env comes from compose).
 
 ### Security
 

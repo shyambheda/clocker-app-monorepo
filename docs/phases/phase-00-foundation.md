@@ -1,7 +1,7 @@
 # Phase 0: Monorepo, Docker, docs foundation
 
 - Branch: `phase-00-foundation`
-- Status: Awaiting sign-off
+- Status: Done
 
 ## Goal
 
@@ -30,7 +30,7 @@ Database connection, security plugins, auth, jobs, UI design, CI/CD (see [ROADMA
 - [x] Web and admin show API status `up` and correct times in UTC, Asia/Kolkata and the browser zone.
 - [x] Editing `apps/*/src`, `apps/*/app` or `packages/shared/src` hot reloads inside the containers.
 - [x] Runtime images run as non-root, can't modify their own code, and stop cleanly on SIGTERM.
-- [ ] Owner completes the manual test checklist below.
+- [x] Owner completes the manual test checklist below.
 
 ## Automated verification (run on 2026-10-04)
 
@@ -52,35 +52,35 @@ Database connection, security plugins, auth, jobs, UI design, CI/CD (see [ROADMA
 Prerequisites: Docker Desktop running, repository cloned, branch `phase-00-foundation` checked out.
 
 1. **Env file**
-   - [ ] Run `cp .env.example .env`. No values are required for Phase 0.
-   - [ ] Run `git status` and confirm `.env` is **not** listed (it is git-ignored).
+   - [x] Run `cp .env.example .env`. No values are required for Phase 0.
+   - [x] Run `git status` and confirm `.env` is **not** listed (it is git-ignored).
 2. **Start the stack**
-   - [ ] Run `docker compose up --build`. The first build takes a few minutes.
-   - [ ] `docker compose ps` shows `redis` (healthy), `api`, `worker`, `web`, `admin` running.
+   - [x] Run `docker compose up --build`. The first build takes a few minutes.
+   - [x] `docker compose ps` shows `redis` (healthy), `api`, `worker`, `web`, `admin` running.
 3. **API**
-   - [ ] Open http://localhost:4000/health/live and see `{"status":"ok","time":"...Z"}` (time in UTC).
-   - [ ] Open http://localhost:4000/nope and see a 404 JSON response. `/` and `/favicon.ico` also return 404
+   - [x] Open http://localhost:4000/health/live and see `{"status":"ok","time":"...Z"}` (time in UTC).
+   - [x] Open http://localhost:4000/nope and see a 404 JSON response. `/` and `/favicon.ico` also return 404
          by design: the API has no homepage, which reveals less to anyone probing it.
-   - [ ] Optional: run `docs/api/requests/health.http` with the VS Code REST Client extension.
+   - [x] Optional: run `docs/api/requests/health.http` with the VS Code REST Client extension.
 4. **Worker**
-   - [ ] Run `docker compose logs worker` and see `worker ready`.
+   - [x] Run `docker compose logs worker` and see `worker ready`.
 5. **Web**
-   - [ ] Open http://localhost:3000. API shows **up** (green).
-   - [ ] The UTC, Asia/Kolkata and "Your browser" rows show the same moment (Kolkata = UTC + 5:30,
+   - [x] Open http://localhost:3000. API shows **up** (green).
+   - [x] The UTC, Asia/Kolkata and "Your browser" rows show the same moment (Kolkata = UTC + 5:30,
          browser = your local time and zone name).
-   - [ ] The `/portal` and `/panel` links open their placeholder pages.
+   - [x] The `/portal` and `/panel` links open their placeholder pages.
 6. **Admin**
-   - [ ] Open http://localhost:3001. It shows the same status card titled "Clocker Admin".
+   - [x] Open http://localhost:3001. It shows the same status card titled "Clocker Admin".
 7. **Resilience**
-   - [ ] Run `docker compose stop api`, refresh http://localhost:3000, and see API **unreachable** (red),
+   - [x] Run `docker compose stop api`, refresh http://localhost:3000, and see API **unreachable** (red),
          with the page still loading. Then run `docker compose start api`.
 8. **Hot reload**
-   - [ ] Edit the heading text in `apps/web/app/page.tsx`, save, refresh, and see the change without rebuilding.
+   - [x] Edit the heading text in `apps/web/app/page.tsx`, save, refresh, and see the change without rebuilding.
          Undo the edit.
 9. **Shut down**
-   - [ ] Run `docker compose down`. Everything stops cleanly.
+   - [x] Run `docker compose down`. Everything stops cleanly.
 10. **Docs**
-    - [ ] Skim `README.md`, `CLAUDE.md`, `docs/ROADMAP.md` and `docs/architecture/overview.md` and
+    - [x] Skim `README.md`, `CLAUDE.md`, `docs/ROADMAP.md` and `docs/architecture/overview.md` and
           flag anything that doesn't match how you want the product to work.
 
 ## Notes
@@ -97,5 +97,6 @@ Prerequisites: Docker Desktop running, repository cloned, branch `phase-00-found
 
 ## Sign-off
 
-- Confirmed by: (pending)
-- Date: (pending)
+- Confirmed by: Shyam Bheda (owner), local Docker run with screenshots of web, admin, /portal, /panel,
+  API unreachable/up toggle, and correct UTC / Asia/Kolkata / America/Vancouver times (DST applied)
+- Date: 2026-10-05
