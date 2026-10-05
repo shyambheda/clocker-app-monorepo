@@ -59,7 +59,8 @@ Prerequisites: Docker Desktop running, repository cloned, branch `phase-00-found
    - [ ] `docker compose ps` shows `redis` (healthy), `api`, `worker`, `web`, `admin` running.
 3. **API**
    - [ ] Open http://localhost:4000/health/live and see `{"status":"ok","time":"...Z"}` (time in UTC).
-   - [ ] Open http://localhost:4000/nope and see a 404 JSON response.
+   - [ ] Open http://localhost:4000/nope and see a 404 JSON response. `/` and `/favicon.ico` also return 404
+         by design: the API has no homepage, which reveals less to anyone probing it.
    - [ ] Optional: run `docs/api/requests/health.http` with the VS Code REST Client extension.
 4. **Worker**
    - [ ] Run `docker compose logs worker` and see `worker ready`.
@@ -83,6 +84,10 @@ Prerequisites: Docker Desktop running, repository cloned, branch `phase-00-found
           flag anything that doesn't match how you want the product to work.
 
 ## Notes
+
+- Owner's first run printed `../../.env not found` from api and worker. Harmless (compose injects env),
+  but misleading. Docker now uses `dev:docker` / `dev:worker:docker` scripts that don't look for the file.
+  `pnpm dev` outside Docker still loads the root `.env`.
 
 - The `tini` init process was dropped from the runtime images. Both servers handle SIGTERM themselves
   and spawn no child processes, so it added packages without benefit.

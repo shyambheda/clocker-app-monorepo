@@ -25,11 +25,12 @@ COPY --from=pruner /repo/out/json/ .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Development image: source is bind-mounted by docker-compose for hot reload.
+# Env comes from docker-compose (env_file + environment), so no .env file is read here.
 FROM deps AS dev
 COPY --from=pruner /repo/out/full/ .
 ENV NODE_ENV=development
 EXPOSE 4000
-CMD ["pnpm", "--filter", "@clocker/api", "dev"]
+CMD ["pnpm", "--filter", "@clocker/api", "dev:docker"]
 
 # 3. Compile TypeScript into dist/, then collect dist/ plus production dependencies only.
 FROM deps AS builder

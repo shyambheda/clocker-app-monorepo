@@ -66,7 +66,7 @@ services:
   worker:
     <<: *env-file
     build: *api-build
-    command: ['pnpm', '--filter', '@clocker/api', 'dev:worker']
+    command: ['pnpm', '--filter', '@clocker/api', 'dev:worker:docker']
     environment:
       NODE_ENV: development
       REDIS_URL: redis://:${REDIS_PASSWORD:-devpassword}@redis:6379
