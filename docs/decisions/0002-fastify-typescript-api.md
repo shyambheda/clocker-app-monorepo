@@ -4,15 +4,16 @@
 
 ## Context
 
-The API is public and must be secure, fast, and easy to keep correct as it grows.
+The API is public. It must be secure and fast. It must stay correct when it becomes larger.
 
 ## Decision
 
-TypeScript (strict) with Fastify 5. Request and response schemas are written in Zod (from Phase 1),
-which also generates the OpenAPI spec. Security uses the official Fastify plugins (helmet, cors, rate-limit).
+Use TypeScript (strict) with Fastify 5. Write the request and response schemas in Zod (from Phase 2).
+The Zod schemas also make the OpenAPI spec. Use the official Fastify plugins for security
+(helmet, cors, rate-limit).
 
 ## Consequences
 
-- Response schemas mean only declared fields are serialized, so internal fields can't leak by accident.
-- Schema-first routes give typed handlers and generated API docs from one source.
-- Smaller ecosystem than Express, but the official plugins cover everything we need.
+- The response schemas serialize only the declared fields. Thus internal fields cannot leak by accident.
+- One schema for each route gives typed handlers and the API docs.
+- The ecosystem is smaller than the Express ecosystem. The official plugins supply all that we need.

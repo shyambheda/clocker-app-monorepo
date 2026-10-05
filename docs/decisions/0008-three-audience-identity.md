@@ -1,22 +1,22 @@
 # 0008: One identity, three audiences (admin, portal, panel)
 
-- Status: Accepted (Phase 0, implemented in Phase 3)
+- Status: Accepted (Phase 0, implementation in Phase 4)
 
 ## Context
 
-Platform staff, customers (orgs) and end users all sign in. A person may be staff in one org and an end
-user in another.
+Platform staff, customers (orgs) and end users sign in. One person can be staff in one org and an
+end user in a different org.
 
 ## Decision
 
-One `users` table (unique email, always required). Org access comes from `members` rows with roles
-`owner` / `admin` / `staff` (portal) and `member` (panel). Platform access comes from a separate
-`platform_role`, never from org roles. The admin UI is a separate app (`admin.getclocker.app`), uses a
-separate audited DB role to read across tenants, and requires MFA for staff. Members join via email invites
-or bulk CSV import.
+One `users` table (unique email, always required). Org access comes from `members` rows with the
+roles `owner`, `admin`, `staff` (portal) and `member` (panel). Platform access comes from a separate
+`platform_role`, not from org roles. The admin UI is a separate app (`admin.example.com`). It uses a
+separate DB role, with an audit log, to read the data of all tenants. Staff must use MFA.
+Members join through email invites or a CSV import.
 
 ## Consequences
 
-- One login for everyone. After sign-in the user picks an org, and their role decides portal or panel.
-- Customer-side bugs can't escalate to platform access. Admin code never ships to customer browsers.
-- Impersonation for support is time-limited, audited, and cannot target staff accounts.
+- One login for all users. After sign-in, the user selects an org. The org role selects the portal or the panel.
+- A bug on the customer side cannot give platform access. The admin code is not sent to customer browsers.
+- Impersonation for support has a time limit, goes into the audit log, and cannot target staff accounts.

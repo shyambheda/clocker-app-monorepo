@@ -4,17 +4,19 @@
 
 ## Context
 
-The product has an API, a worker, a web app, an admin app, and later a mobile app. They share API
-contracts and time formatting rules. Keeping them in separate repos means duplicated types that drift apart.
+A product has an API, a worker, a web app, an admin app, and later a mobile app. These apps share
+API contracts and time format rules. Separate repositories need copies of the types, and the copies
+become different over time.
 
 ## Decision
 
-One repository. pnpm workspaces link internal packages (`@clocker/*`). Turborepo runs tasks
-(lint, typecheck, test, build, dev) in dependency order with caching. Internal packages ship TypeScript source.
+Use one repository. pnpm workspaces link the internal packages (`@repo/*`). Turborepo runs the tasks
+(lint, typecheck, test, build, dev) in the dependency order and keeps a cache. The internal packages
+ship TypeScript source.
 
 ## Consequences
 
-- A contract change in `packages/shared` breaks the build of any app that uses it wrongly, before deploy.
-- One install, one `pnpm dev`. CI and Docker only rebuild what changed (`turbo prune`, Railway watch paths).
-- pnpm's strict dependency layout and install-script allowlist reduce supply-chain risk.
-- Contributors need pnpm (via Corepack) rather than npm.
+- If an app uses a contract from `packages/shared` incorrectly, its build fails before the deploy.
+- One install and one `pnpm dev`. CI and Docker build again only what changed (`turbo prune`, Railway watch paths).
+- The strict dependency layout of pnpm and the allowlist for install scripts decrease the supply-chain risk.
+- Contributors use pnpm (through Corepack), not npm.

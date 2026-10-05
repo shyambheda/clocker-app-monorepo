@@ -1,13 +1,17 @@
-# Clocker
+# SaaS starter monorepo
 
-Multi-tenant SaaS platform at [getclocker.app](https://getclocker.app).
+A private starter for multi-tenant SaaS products: API, background worker, customer web app, platform
+admin app, shared contracts and timezone handling, with Docker and Railway deployment. New products are
+cloned from this repository. See [docs/ADOPTING.md](docs/ADOPTING.md).
 
-| Audience                                | App                     | URL (prod)                        |
-| --------------------------------------- | ----------------------- | --------------------------------- |
-| Customers (org owners, admins, staff)   | `apps/web` at `/portal` | https://app.getclocker.app/portal |
-| End users (members of one or more orgs) | `apps/web` at `/panel`  | https://app.getclocker.app/panel  |
-| Platform staff                          | `apps/admin`            | https://admin.getclocker.app      |
-| API (all clients)                       | `apps/api`              | https://api.getclocker.app        |
+| Audience                                | App                     | URL (production example)       |
+| --------------------------------------- | ----------------------- | ------------------------------ |
+| Customers (org owners, admins, staff)   | `apps/web` at `/portal` | https://app.example.com/portal |
+| End users (members of one or more orgs) | `apps/web` at `/panel`  | https://app.example.com/panel  |
+| Platform staff                          | `apps/admin`            | https://admin.example.com      |
+| API (all clients)                       | `apps/api`              | https://api.example.com        |
+
+The product name comes from `APP_NAME` and `NEXT_PUBLIC_APP_NAME` (see `.env.example`).
 
 ## Repository layout
 
@@ -18,9 +22,9 @@ apps/
   admin/      Next.js platform admin app
   mobile/     reserved for the mobile app (later)
 packages/
-  shared/     API contracts (Zod), roles, timezone utilities. Used by every app
+  shared/     API contracts (Zod), roles, product identity, timezone utilities. Used by every app
   config/     shared TypeScript / ESLint presets
-docs/         architecture, decisions, phases, API spec, deployment
+docs/         architecture, decisions, phases, API spec, deployment, style guide
 ```
 
 ## Quick start (Docker)
@@ -40,7 +44,7 @@ docker compose up --build
 | worker  | no port, check `docker compose logs worker`     |
 | redis   | localhost:6379 (password from `REDIS_PASSWORD`) |
 
-There is no local Postgres. Development uses a Neon `dev` branch (see `.env.example`).
+There is no local Postgres for development. It uses a Neon `dev` branch (see `.env.example`).
 Code changes in `apps/*` and `packages/shared` hot reload inside the containers. Rebuild
 (`docker compose up --build`) after changing dependencies.
 
@@ -51,17 +55,20 @@ Requirements: Node 24 (`.nvmrc`), pnpm via Corepack (`corepack enable`), and a R
 ```bash
 pnpm install
 pnpm dev            # runs every app in watch mode (Turborepo)
-pnpm check          # lint + typecheck + test for every package
+pnpm check          # lint + typecheck + unit tests for every package
 pnpm build          # production builds
 ```
 
 ## Documentation
 
+- [Start a new product from the starter](docs/ADOPTING.md)
 - [Roadmap and phase status](docs/ROADMAP.md)
 - [Architecture overview](docs/architecture/overview.md)
+- [Adapters for external services](docs/architecture/adapters.md)
 - [Security model](docs/architecture/security.md)
 - [Timezone rules](docs/architecture/timezones.md)
 - [Decision records](docs/decisions/README.md)
 - [Deploying to Railway](docs/deploy/railway.md)
 - [API docs](docs/api/README.md)
+- [Documentation style (Simplified Technical English)](docs/STYLE.md)
 - [Changelog](docs/CHANGELOG.md)
