@@ -1,3 +1,4 @@
-// Public surface of @clocker/shared. Every app (api, web, admin, mobile) imports from here,
-// so contracts and formatting rules are defined once.
+// Public surface of @repo/shared. All apps (api, web, admin, mobile) import from this file.
+// Thus each contract and each format rule has one definition.
+export * from './app/index'
 export * from './time/index'

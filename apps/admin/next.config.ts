@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // Trace files from the monorepo root so workspace packages are included in the bundle.
   outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
   // Workspace packages ship TypeScript source.
-  transpilePackages: ['@clocker/shared'],
+  transpilePackages: ['@repo/shared'],
   poweredByHeader: false,
   reactStrictMode: true,
 }

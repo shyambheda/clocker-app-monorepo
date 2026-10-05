@@ -6,7 +6,7 @@ export default function PortalPage() {
       <h1>Portal</h1>
       <p className="muted">
         Where customers (org owners, admins and staff) manage their organization. Placeholder until
-        Phase 5.
+        Phase 6.
       </p>
       <Link href="/">Back</Link>
     </main>

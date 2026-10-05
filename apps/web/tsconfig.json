@@ -1,5 +1,5 @@
 {
-  "extends": "@clocker/config/tsconfig.next.json",
+  "extends": "@repo/config/tsconfig.next.json",
   "compilerOptions": {
     "paths": { "@/*": ["./*"] }
   },

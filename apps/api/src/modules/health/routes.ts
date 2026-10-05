@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify'
 export function healthRoutes(app: FastifyInstance): void {
   // Liveness: the process is up and serving HTTP. It checks no dependencies, so a database or
   // Redis outage never makes the platform restart a healthy container.
-  // Readiness (DB + Redis checks) arrives in Phase 1.
+  // Phase 2 adds the readiness check (database and Redis).
   app.get(
     '/health/live',
     {

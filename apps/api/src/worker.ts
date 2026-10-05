@@ -5,7 +5,8 @@ import { EnvValidationError, loadEnv, workerEnvSchema } from './config/env'
 import { loggerOptions } from './lib/logger'
 
 // Background worker process. Same codebase and image as the API, different entrypoint.
-// Phase 0 only proves the Redis connection. BullMQ queues and schedules arrive in Phase 2.
+// For now, the worker only makes sure that the Redis connection works.
+// Phase 3 adds BullMQ queues and schedules.
 
 let env
 try {
@@ -24,7 +25,7 @@ redis.on('error', (err) => log.error({ err }, 'redis connection error'))
 
 await redis.connect()
 await redis.ping()
-log.info('worker ready')
+log.info({ appName: env.APP_NAME }, 'worker ready')
 
 closeWithGrace({ delay: 10_000 }, async ({ signal, err }) => {
   if (err) log.error({ err }, 'worker shutting down after an unexpected error')

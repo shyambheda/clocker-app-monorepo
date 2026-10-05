@@ -8,7 +8,7 @@ export interface BuildAppOptions {
 }
 
 // Builds the Fastify app without listening, so tests can drive it with app.inject().
-// Security plugins (helmet, CORS, rate limits, ...) are registered here in Phase 1.
+// Phase 2 adds the security plugins (helmet, CORS, rate limits and more) here.
 export async function buildApp(options: BuildAppOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: options.logger ?? false,

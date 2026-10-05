@@ -5,7 +5,7 @@ export default function PanelPage() {
     <main>
       <h1>Panel</h1>
       <p className="muted">
-        Where end users work inside the organizations they belong to. Placeholder until Phase 5.
+        Where end users work inside the organizations they belong to. Placeholder until Phase 6.
       </p>
       <Link href="/">Back</Link>
     </main>

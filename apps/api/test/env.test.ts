@@ -1,3 +1,4 @@
+import { DEFAULT_APP_NAME } from '@repo/shared'
 import { describe, expect, it } from 'vitest'
 import { EnvValidationError, apiEnvSchema, loadEnv, workerEnvSchema } from '../src/config/env'
 
@@ -6,6 +7,13 @@ describe('loadEnv', () => {
     const env = loadEnv(apiEnvSchema, {})
     expect(env.PORT).toBe(4000)
     expect(env.HOST).toBe('0.0.0.0')
+    expect(env.APP_NAME).toBe(DEFAULT_APP_NAME)
+  })
+
+  it('reads the product name', () => {
+    const env = loadEnv(apiEnvSchema, { APP_NAME: ' Acme Cloud ' })
+    expect(env.APP_NAME).toBe('Acme Cloud')
+    expect(loadEnv(apiEnvSchema, { APP_NAME: '' }).APP_NAME).toBe(DEFAULT_APP_NAME)
   })
 
   it('rejects an invalid port', () => {

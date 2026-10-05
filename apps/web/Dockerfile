@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Image for @clocker/web (Next.js).
+# Image for @repo/web (Next.js).
 # Build from the repo root:  docker build -f apps/web/Dockerfile .
 #   --target dev      -> hot-reload image used by docker-compose
 #   (default) runtime -> small production image (Next.js standalone output) used by Railway
@@ -13,11 +13,11 @@ ENV PNPM_HOME=/pnpm \
 RUN corepack enable
 WORKDIR /repo
 
-# 1. Keep only the files @clocker/web needs.
+# 1. Keep only the files @repo/web needs.
 FROM base AS pruner
 RUN npm install -g turbo@2.11.7
 COPY . .
-RUN turbo prune @clocker/web --docker
+RUN turbo prune @repo/web --docker
 
 # 2. Install dependencies (cached layer).
 FROM base AS deps
@@ -29,12 +29,15 @@ FROM deps AS dev
 COPY --from=pruner /repo/out/full/ .
 ENV NODE_ENV=development
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@clocker/web", "dev"]
+CMD ["pnpm", "--filter", "@repo/web", "dev"]
 
 # 3. Build the standalone server bundle.
 FROM deps AS builder
 COPY --from=pruner /repo/out/full/ .
-RUN pnpm turbo run build --filter=@clocker/web
+# Next.js puts NEXT_PUBLIC_ values into the build. Railway gives service variables as build args.
+ARG NEXT_PUBLIC_APP_NAME
+ENV NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
+RUN pnpm turbo run build --filter=@repo/web
 
 # 4. Runtime: only the standalone bundle, non-root user.
 # Node runs as PID 1. The Next.js standalone server handles SIGTERM itself.

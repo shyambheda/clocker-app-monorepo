@@ -1,4 +1,4 @@
-import { formatInTimeZone } from '@clocker/shared'
+import { formatInTimeZone } from '@repo/shared'
 import { ApiStatus } from './api-status'
 import { BrowserTime } from './browser-time'
 

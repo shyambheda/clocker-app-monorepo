@@ -1,11 +1,12 @@
 import { StatusCard } from '@/components/status-card'
+import { appName } from '@/lib/app-config'
 
 export const dynamic = 'force-dynamic'
 
 export default function AdminHomePage() {
   return (
     <main>
-      <h1>Clocker Admin</h1>
+      <h1>{appName} Admin</h1>
       <p className="muted">
         Phase 0 skeleton. Staff login (with mandatory MFA), orgs, users and plans arrive in later
         phases.

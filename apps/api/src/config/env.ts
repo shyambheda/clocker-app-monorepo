@@ -1,9 +1,17 @@
+import { resolveAppName } from '@repo/shared'
 import { z } from 'zod'
 
 // Every process validates its environment at boot and refuses to start on bad config.
 // Error messages name the variable but never echo its value, so secrets don't leak into logs.
 
 const baseEnvSchema = z.object({
+  // Product name. Each product sets its own value. Emails and logs use it.
+  // An empty value gives the default name.
+  APP_NAME: z
+    .string()
+    .max(100)
+    .optional()
+    .transform((value) => resolveAppName(value)),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 })

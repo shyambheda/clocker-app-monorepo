@@ -24,3 +24,4 @@ closeWithGrace({ delay: 10_000 }, async ({ signal, err }) => {
 })
 
 await app.listen({ host: env.HOST, port: env.PORT })
+app.log.info({ appName: env.APP_NAME }, 'api ready')

@@ -1,3 +1,3 @@
-import { baseConfig } from '@clocker/config/eslint/base'
+import { baseConfig } from '@repo/config/eslint/base'
 
 export default baseConfig({ tsconfigRootDir: import.meta.dirname })

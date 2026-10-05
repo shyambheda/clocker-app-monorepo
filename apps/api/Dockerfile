@@ -13,11 +13,11 @@ ENV PNPM_HOME=/pnpm \
 RUN corepack enable
 WORKDIR /repo
 
-# 1. Keep only the files @clocker/api needs (its code, workspace deps, pruned lockfile).
+# 1. Keep only the files @repo/api needs (its code, workspace deps, pruned lockfile).
 FROM base AS pruner
 RUN npm install -g turbo@2.11.7
 COPY . .
-RUN turbo prune @clocker/api --docker
+RUN turbo prune @repo/api --docker
 
 # 2. Install all dependencies (cached layer: only re-runs when package.json/lockfile change).
 FROM base AS deps
@@ -30,14 +30,14 @@ FROM deps AS dev
 COPY --from=pruner /repo/out/full/ .
 ENV NODE_ENV=development
 EXPOSE 4000
-CMD ["pnpm", "--filter", "@clocker/api", "dev:docker"]
+CMD ["pnpm", "--filter", "@repo/api", "dev:docker"]
 
 # 3. Compile TypeScript into dist/, then collect dist/ plus production dependencies only.
 FROM deps AS builder
 COPY --from=pruner /repo/out/full/ .
-RUN pnpm turbo run build --filter=@clocker/api
+RUN pnpm turbo run build --filter=@repo/api
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm --filter=@clocker/api deploy --prod --legacy /prod/api
+    pnpm --filter=@repo/api deploy --prod --legacy /prod/api
 
 # 4. Runtime: no build tools, no dev dependencies, non-root user.
 # Node runs as PID 1. That is safe here because the app installs its own SIGTERM handler

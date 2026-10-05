@@ -4,10 +4,11 @@
 #   api    http://localhost:4000
 #   worker (background jobs, no port)
 #   redis  localhost:6379          (cache, rate limits, job queue)
-# There is no local Postgres: development uses your Neon `dev` branch (DATABASE_URL in .env).
-# Ports are bound to 127.0.0.1 so nothing is exposed to your local network.
+# There is no local Postgres. Development uses your Neon `dev` branch (DATABASE_URL in .env).
+# The ports are bound to 127.0.0.1. Thus your local network cannot get access to them.
+# COMPOSE_PROJECT_NAME overrides the project name below.
 
-name: clocker
+name: saas-starter
 
 x-env-file: &env-file
   env_file:
@@ -66,7 +67,7 @@ services:
   worker:
     <<: *env-file
     build: *api-build
-    command: ['pnpm', '--filter', '@clocker/api', 'dev:worker:docker']
+    command: ['pnpm', '--filter', '@repo/api', 'dev:worker:docker']
     environment:
       NODE_ENV: development
       REDIS_URL: redis://:${REDIS_PASSWORD:-devpassword}@redis:6379
