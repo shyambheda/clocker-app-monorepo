@@ -4,3 +4,4 @@ dist
 .next
 .turbo
 coverage
+docs/api/openapi.json
