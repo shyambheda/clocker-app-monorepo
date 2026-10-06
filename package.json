@@ -12,6 +12,8 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "pnpm --filter @repo/api test:integration",
+    "test:neon": "pnpm --filter @repo/api test:neon",
     "check": "turbo run lint typecheck test",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
