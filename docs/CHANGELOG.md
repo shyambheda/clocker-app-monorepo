@@ -2,6 +2,30 @@
 
 We add an entry when the owner signs off a phase and the phase merges.
 
+## Phase 1: Neutral starter foundation (2026-10-06)
+
+### Added
+
+- Product identity from configuration: `APP_NAME` (API and worker) and `NEXT_PUBLIC_APP_NAME` (web and admin, put into the build).
+- `DEFAULT_APP_NAME` and `resolveAppName` in `@repo/shared`, with tests.
+- The API and the worker write the product name to the log at start.
+- `docs/STYLE.md` (Simplified Technical English rules and glossary), `docs/ADOPTING.md` (start a product from the starter), `docs/architecture/adapters.md` (adapter rule).
+- Decision records 0009 (starter and neutral identity), 0010 (adapters), 0011 (test databases, amends 0003), 0012 (STE docs).
+- The approved plan for Phase 2 (`docs/phases/phase-02-api-foundation.md`).
+
+### Changed
+
+- The repository is a neutral SaaS starter (`saas-starter-monorepo`). No product name is in the code or the docs.
+- The package scope is `@repo/*`. The Compose project name is `saas-starter` (`COMPOSE_PROJECT_NAME` overrides it).
+- All docs use Simplified Technical English and `example.com` placeholders.
+- The roadmap has new phase numbers: Phase 2 is the API foundation.
+- The Railway guide lists `APP_NAME` and `NEXT_PUBLIC_APP_NAME`. The web and admin Dockerfiles give `NEXT_PUBLIC_APP_NAME` to the build.
+- `CLAUDE.md`: git identity rule for cloud sessions, adapter rule and documentation language rule.
+
+### Security
+
+- No change to the behavior of the apps. No new dependencies. No secrets in the repository.
+
 ## Phase 0: Monorepo, Docker, docs foundation (2026-10-05)
 
 ### Added

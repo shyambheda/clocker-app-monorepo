@@ -1,7 +1,7 @@
 # Phase 1: Neutral starter foundation
 
 - Branch: `phase-01-neutral-starter`
-- Status: Awaiting sign-off
+- Status: Done
 
 ## Goal
 
@@ -52,13 +52,13 @@ private starter for SaaS products. The first product is a clone of this starter.
 
 ## Acceptance criteria
 
-- [ ] A case-insensitive search for the old product name finds no result outside `.git`.
-- [ ] `pnpm install`, `pnpm check` and `pnpm build` pass.
-- [ ] `docker compose up --build` starts all services.
-- [ ] The web app and the admin app show the value of `NEXT_PUBLIC_APP_NAME`.
-- [ ] `GET /health/live` returns 200.
-- [ ] The files in `docs/` follow `docs/STYLE.md` as much as practical.
-- [ ] The owner completes the manual test checklist.
+- [x] A case-insensitive search for the old product name finds no result outside `.git`.
+- [x] `pnpm install`, `pnpm check` and `pnpm build` pass.
+- [x] `docker compose up --build` starts all services.
+- [x] The web app and the admin app show the value of `NEXT_PUBLIC_APP_NAME`.
+- [x] `GET /health/live` returns 200.
+- [x] The files in `docs/` follow `docs/STYLE.md` as much as practical.
+- [x] The owner completes the manual test checklist.
 
 ## Files
 
@@ -91,37 +91,48 @@ uses the Node 24 containers.
 Prerequisites: Docker Desktop is running. Your `.env` from Phase 0 exists.
 
 1. **Get the branch**
-   - [ ] Run `git fetch origin` and `git checkout phase-01-neutral-starter`.
+   - [x] Run `git fetch origin` and `git checkout phase-01-neutral-starter`.
 2. **Start the stack**
-   - [ ] Add these lines to your `.env` (use your own name if you want):
+   - [x] Add these lines to your `.env` (use your own name if you want):
          `APP_NAME="Acme Test"` and `NEXT_PUBLIC_APP_NAME="Acme Test"`.
-   - [ ] Run `docker compose down`, then `docker compose up --build`.
-   - [ ] Run `docker compose ps`. The project name is `saas-starter`. `redis` (healthy), `api`, `worker`,
+   - [x] Run `docker compose down`, then `docker compose up --build`.
+   - [x] Run `docker compose ps`. The project name is `saas-starter`. `redis` (healthy), `api`, `worker`,
          `web` and `admin` are running.
 3. **Names in the browser**
-   - [ ] Open http://localhost:3000. The tab title and the heading show `Acme Test`. The API status is **up**.
-   - [ ] Open http://localhost:3001. The tab title and the heading show `Acme Test Admin`.
-   - [ ] The `/portal` and `/panel` links open their placeholder pages.
+   - [x] Open http://localhost:3000. The tab title and the heading show `Acme Test`. The API status is **up**.
+   - [x] Open http://localhost:3001. The tab title and the heading show `Acme Test Admin`.
+   - [x] The `/portal` and `/panel` links open their placeholder pages.
 4. **Default name**
-   - [ ] Remove the two lines from `.env`. Run `docker compose up -d --force-recreate web admin api worker`.
-   - [ ] Refresh the two pages. They show `SaaS Starter` and `SaaS Starter Admin`.
+   - [x] Remove the two lines from `.env`. Run `docker compose up -d --force-recreate web admin api worker`.
+   - [x] Refresh the two pages. They show `SaaS Starter` and `SaaS Starter Admin`.
 5. **API and worker**
-   - [ ] Open http://localhost:4000/health/live. It shows `{"status":"ok","time":"...Z"}`.
-   - [ ] Run `docker compose logs api worker | grep appName`. The `api ready` and `worker ready` lines show the name.
+   - [x] Open http://localhost:4000/health/live. It shows `{"status":"ok","time":"...Z"}`.
+   - [x] Run `docker compose logs api worker | grep appName`. The `api ready` and `worker ready` lines show the name.
 6. **Name search**
-   - [ ] Run `git grep -i -n <old product name>`. There is no result.
+   - [x] Run `git grep -i -n <old product name>`. There is no result.
 7. **Docs**
-   - [ ] Read `docs/STYLE.md`, `docs/ADOPTING.md`, `docs/architecture/adapters.md` and `docs/ROADMAP.md`.
-   - [ ] Read some other docs and tell me where the STE text is not clear.
-   - [ ] Read `docs/phases/phase-02-api-foundation.md`. This is the plan for the next phase.
+   - [x] Read `docs/STYLE.md`, `docs/ADOPTING.md`, `docs/architecture/adapters.md` and `docs/ROADMAP.md`.
+   - [x] Read some other docs and tell me where the STE text is not clear.
+   - [x] Read `docs/phases/phase-02-api-foundation.md`. This is the plan for the next phase.
 8. **Shut down**
-   - [ ] Run `docker compose down`.
+   - [x] Run `docker compose down`.
+
+Notes from the owner test:
+
+- The owner tested from `main` (step 1 used `git checkout main` and `git pull`), after the repository
+  rename to `saas-starter-monorepo`.
+- All steps passed.
 
 Note: the Redis volume has a new name because the Compose project name changed. The old volume
 (`<old project name>_redis-data`) is not used any more. Find it with `docker volume ls` and delete it
 with `docker volume rm <name>`.
 
+## Delivery
+
+The owner decided to put Phase 1 on `main` with a direct push (no pull request). This is a one-time
+exception to the rule in `CLAUDE.md`. The close-out commit also went directly to `main`.
+
 ## Sign-off
 
-- Confirmed by:
-- Date:
+- Confirmed by: Shyam Bheda (owner). Local Docker test from `main`. All checks passed.
+- Date: 2026-10-06
