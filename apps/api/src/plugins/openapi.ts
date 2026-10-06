@@ -40,6 +40,15 @@ async function openApiPlugin(app: FastifyInstance, options: OpenApiOptions) {
     await app.register(scalar, {
       routePrefix: '/reference',
       logLevel: 'warn',
+      // The page loads nothing from other hosts: no fonts from the Scalar CDN, no telemetry, and no
+      // hosted features (AI chat, MCP). The CSP above would block them anyway.
+      configuration: {
+        withDefaultFonts: false,
+        telemetry: false,
+        agent: { disabled: true },
+        mcp: { disabled: true },
+        showDeveloperTools: 'never',
+      },
       hooks: {
         onRequest: (_request, reply, done) => {
           reply.header('content-security-policy', REFERENCE_CSP)

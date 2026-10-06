@@ -4,7 +4,9 @@
 #   api    http://localhost:4000
 #   worker (background jobs, no port)
 #   redis  localhost:6379          (cache, rate limits, job queue)
-# There is no local Postgres. Development uses your Neon `dev` branch (DATABASE_URL in .env).
+#   migrate (one-shot: applies the database migrations, then exits; api starts after it)
+# There is no local Postgres. Development uses your Neon `dev` branch (DATABASE_URL and
+# DATABASE_MIGRATION_URL in .env).
 # The ports are bound to 127.0.0.1. Thus your local network cannot get access to them.
 # COMPOSE_PROJECT_NAME overrides the project name below.
 
@@ -22,6 +24,7 @@ x-api-build: &api-build
 
 x-api-volumes: &api-volumes
   - ./apps/api/src:/repo/apps/api/src
+  - ./apps/api/drizzle:/repo/apps/api/drizzle
   - ./packages/shared/src:/repo/packages/shared/src
 
 services:
@@ -49,6 +52,16 @@ services:
       timeout: 3s
       retries: 10
 
+  # Applies the migrations to the Neon `dev` branch and sets the app_user password, then exits.
+  migrate:
+    <<: *env-file
+    build: *api-build
+    command: ['pnpm', '--filter', '@repo/api', 'db:migrate:docker']
+    environment:
+      NODE_ENV: development
+    volumes: *api-volumes
+    restart: 'no'
+
   api:
     <<: *env-file
     build: *api-build
@@ -63,6 +76,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker:
     <<: *env-file
