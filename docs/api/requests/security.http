@@ -1,0 +1,74 @@
+@baseUrl = http://localhost:4000
+
+### Security headers: expect content-security-policy "default-src 'none';..." and x-request-id
+GET {{baseUrl}}/health/live
+
+### Request id from the client: expect a different x-request-id (a UUID from the API)
+GET {{baseUrl}}/health/live
+x-request-id: my-own-id
+
+### Allowed origin: expect 200 and access-control-allow-origin: http://localhost:3000
+GET {{baseUrl}}/health/live
+Origin: http://localhost:3000
+
+### Preflight from an allowed origin: expect 204 and access-control-allow-methods
+OPTIONS {{baseUrl}}/health/live
+Origin: http://localhost:3000
+Access-Control-Request-Method: POST
+
+### Origin that is not allowed: expect 403 ORIGIN_NOT_ALLOWED
+GET {{baseUrl}}/health/live
+Origin: https://evil.example.net
+
+### Preflight from an origin that is not allowed: expect 403 ORIGIN_NOT_ALLOWED
+OPTIONS {{baseUrl}}/health/live
+Origin: https://evil.example.net
+Access-Control-Request-Method: POST
+
+### Origin null: expect 403 ORIGIN_NOT_ALLOWED
+GET {{baseUrl}}/health/live
+Origin: null
+
+### Write with a cookie and without Origin: expect 403 ORIGIN_REQUIRED
+POST {{baseUrl}}/health/live
+Cookie: session=test
+Content-Type: application/json
+
+{}
+
+### Write with a cookie from an allowed origin: expect 404 NOT_FOUND (the check passes, no POST route)
+POST {{baseUrl}}/health/live
+Cookie: session=test
+Origin: http://localhost:3000
+Content-Type: application/json
+
+{}
+
+### Write with only a bearer token: expect 404 NOT_FOUND (the origin check does not apply)
+POST {{baseUrl}}/health/live
+Authorization: Bearer test
+Content-Type: application/json
+
+{}
+
+### Prototype poisoning: expect 400 INVALID_BODY
+POST {{baseUrl}}/health/live
+Content-Type: application/json
+
+{"__proto__": {"isAdmin": true}}
+
+### Bad JSON: expect 400 INVALID_BODY
+POST {{baseUrl}}/health/live
+Content-Type: application/json
+
+{"a":
+
+# 415 UNSUPPORTED_MEDIA_TYPE and 413 PAYLOAD_TOO_LARGE need a POST route. There is none yet.
+# The unit tests check them (apps/api/test/unit/http.test.ts).
+
+### Rate limit: set RATE_LIMIT_MAX=3 in .env, restart the api, send this request 4 times.
+# Expect 429 RATE_LIMITED with a Retry-After header on the 4th request.
+GET {{baseUrl}}/health/ready
+
+### API reference (development only): expect 200 and an HTML page. In production: 404.
+GET {{baseUrl}}/reference/

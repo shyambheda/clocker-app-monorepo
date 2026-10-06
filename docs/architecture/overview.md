@@ -66,7 +66,7 @@ change only one module. Refer to [adapters.md](adapters.md).
 
 | Prefix         | Who                   | Notes                                     |
 | -------------- | --------------------- | ----------------------------------------- |
-| `/health/*`    | platform              | liveness (Phase 0), readiness (Phase 2)   |
+| `/health/*`    | platform              | liveness and readiness                    |
 | `/auth/*`      | everyone              | Better Auth (Phase 4)                     |
 | `/v1/me/*`     | signed-in users       | profile, zone override, my orgs           |
 | `/v1/portal/*` | org owner/admin/staff | for the active org only                   |
@@ -105,14 +105,21 @@ The Dockerfiles use `turbo prune`. Thus each image contains only its app and its
 
 ## Environments
 
-| Env        | Database                                                                   | Redis                   | Where                  |
-| ---------- | -------------------------------------------------------------------------- | ----------------------- | ---------------------- |
-| Local      | Neon branch `dev`                                                          | Docker `redis:8-alpine` | Docker Compose         |
-| Tests      | Disposable local Postgres container, or a disposable Neon branch (Phase 2) | Disposable container    | local / GitHub Actions |
-| Production | Neon branch `main`                                                         | Railway Redis           | Railway                |
+| Env        | Database                                                         | Redis                   | Where                  |
+| ---------- | ---------------------------------------------------------------- | ----------------------- | ---------------------- |
+| Local      | Neon branch `dev`                                                | Docker `redis:8-alpine` | Docker Compose         |
+| Tests      | Disposable local Postgres container, or a disposable Neon branch | Disposable container    | local / GitHub Actions |
+| Production | Neon branch `main`                                               | Railway Redis           | Railway                |
 
-## Current state (Phase 1)
+## Current state (Phase 2)
 
-The apps are skeletons: `GET /health/live`, a worker that connects to Redis, and web and admin pages
-that show the API status and timezone formats. The product name comes from `APP_NAME` and
-`NEXT_PUBLIC_APP_NAME`. Refer to the [ROADMAP](../ROADMAP.md) for the work of each phase.
+- The API has the security layers of [security.md](security.md): security headers, origin allowlist and
+  CORS, origin check for cookie writes, rate limits in Redis, body limits, Zod validation of input and
+  output, and one error shape.
+- Routes: `GET /health/live` and `GET /health/ready` (database and Redis). The OpenAPI document comes
+  from the Zod schemas (`docs/api/openapi.json`). The reference UI is at `/reference` in development.
+- The database adapter connects to Neon with the `pg` driver and Drizzle. The runtime role is
+  `app_user`. `withTenant` binds a transaction to one org. Refer to [database.md](database.md).
+- The worker connects to Redis. The web and admin apps show the API status and timezone formats.
+
+Refer to the [ROADMAP](../ROADMAP.md) for the work of each phase.

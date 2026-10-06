@@ -1,7 +1,7 @@
 # Phase 2: API foundation and security
 
 - Branch: `phase-02-api-foundation`
-- Status: Planned (plan approved by the owner on 2026-10-05)
+- Status: Awaiting sign-off (plan approved by the owner on 2026-10-05, build done on 2026-10-06)
 
 ## Goal
 
@@ -198,13 +198,111 @@ Keep `minimumReleaseAge` and `onlyBuiltDependencies` as they are.
 2. Change `DATABASE_URL` in `.env`: user `app_user`, the new password, the same pooled host.
 3. Run `pnpm --filter @repo/api db:migrate` one time against the `dev` branch.
 
-## Automated verification
+## Changes to the plan (made during the build)
 
-To be completed after the build.
+| #   | Plan                                                              | Build                                                                                                                                                                                             | Reason                                                                                                                                    |
+| --- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `createDb(url)` returns `{ db, pool, ping }`                      | It returns `{ db, ping, close }`                                                                                                                                                                  | Adapter rule 4: no `pg` type outside the adapter                                                                                          |
+| 2   | Phase 4 policies read `current_setting('app.org_id', true)::uuid` | Use `nullif(current_setting('app.org_id', true), '')::uuid`                                                                                                                                       | After a `withTenant` transaction, the setting on the same pooled connection is `''`, and `''::uuid` fails. The integration tests prove it |
+| 3   | One ioredis factory                                               | `createRedis(url, { profile, onError })` returns `{ connection, ping, close }`. The worker also uses it                                                                                           | Same adapter shape as the database. `ping` has a timeout                                                                                  |
+| 4   | "If Redis fails, the limiter writes an error to the log"          | A small store wraps the Redis store of `@fastify/rate-limit` (`skipOnError` alone does not log)                                                                                                   | The plugin has no hook for store errors. The wrapper imports `@fastify/rate-limit/store/RedisStore.js`                                    |
+| 5   | `TEST_DB_PROVIDER` selects the provider                           | The scripts use Vitest modes `test-local` and `test-neon`. `TEST_DB_PROVIDER` still works without a mode                                                                                          | Vite reserves the mode name `local`. The modes work on all operating systems                                                              |
+| 6   | Neon provider: a Neon branch                                      | It also starts a Redis container. Thus `pnpm test:neon` needs Docker                                                                                                                              | The tests need a Redis. Neon has no Redis                                                                                                 |
+| 7   | Postgres version from Neon                                        | `postgres:18-alpine` (owner answer on 2026-10-06)                                                                                                                                                 | The cloud session cannot connect to Neon                                                                                                  |
+| 8   | CSP for `/reference` "less strict"                                | `script-src` and `style-src` `'self' 'unsafe-inline'`, `img-src` and `font-src` `'self' data:`, `connect-src 'self'`. Scalar CDN fonts, telemetry, AI chat, MCP and the developer toolbar are off | The page loads nothing from other hosts. Checked in Chromium: no CSP error                                                                |
+| 9   | Helmet defaults                                                   | Also `X-Frame-Options: DENY`                                                                                                                                                                      | Agrees with `frame-ancestors 'none'`                                                                                                      |
+| 10  | Error codes in the plan                                           | Also `BAD_REQUEST`, `UNAUTHORIZED`, `FORBIDDEN`, `METHOD_NOT_ALLOWED`, `NOT_ACCEPTABLE`, `REQUEST_TIMEOUT`, `CONFLICT`, `GONE`, `UNPROCESSABLE`, `REQUEST_FAILED`                                 | "A fixed message for each status" needs a code for each status                                                                            |
+| 11  | Migration `0000_db_roles.sql`                                     | Also `REVOKE CREATE ON SCHEMA public FROM PUBLIC` and grants on tables that exist. It does not change the attributes of an existing role                                                          | Defense in depth. `ALTER ROLE ... NOSUPERUSER` needs a real superuser, and Neon does not give one                                         |
+| 12  | `docs/api/openapi.json`                                           | Prettier ignores the file                                                                                                                                                                         | The generator writes the file. The unit test compares it with the code                                                                    |
+
+## Automated verification (run on 2026-10-06, cloud session)
+
+The cloud session used Node 24.21.0 and Docker 29.8 (the session started the Docker daemon).
+
+| Check                                                                     | Result                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check`                                                              | 10/10 tasks pass. ESLint 0 errors, 0 warnings. Unit tests: shared 20/20, api 70/70                                                                                                                          |
+| `pnpm build`                                                              | 3/3 tasks pass. The API bundle has `server.js`, `worker.js` and `migrate.js`                                                                                                                                |
+| `pnpm format:check`                                                       | All files use the Prettier style                                                                                                                                                                            |
+| `pnpm test:integration`                                                   | 12/12 pass in about 30 s (Postgres 18 and Redis 8 containers)                                                                                                                                               |
+| Containers after the run                                                  | Removed. Ctrl+C during the setup: the two containers stopped in less than 2 s. The Ryuk reaper removes containers after a crash                                                                             |
+| `pnpm --filter @repo/api deploy --prod` (the same step as the Dockerfile) | The folder has `dist/` and `drizzle/`, and no dev dependencies                                                                                                                                              |
+| `node dist/migrate.js` with `NODE_ENV=production` on Postgres 18          | Exit 0. The password is not in the log. With the owner role in `DATABASE_URL`: exit 1 and "DATABASE_URL must use the role app_user in production"                                                           |
+| `node dist/server.js` with `NODE_ENV=production`                          | Live 200, ready 200, HSTS sent, `/reference/` 404, other origin 403, cookie write 403. Redis stopped: ready 503 in 1 s. Redis started again: ready 200. SIGTERM: clean shutdown. No query string in the log |
+| `/reference/` in Chromium (development)                                   | The page shows the two health routes. No CSP error, no request to other hosts                                                                                                                               |
+| `docker compose config`                                                   | Valid                                                                                                                                                                                                       |
+| `pnpm test:neon`                                                          | Not run: the cloud session cannot connect to the Neon API. A unit test checks the requests of the Neon provider with a fake `fetch`. The owner runs it (checklist step 5)                                   |
+| `docker build` and `docker compose up --build`                            | Not run: the network of the session does not let builds download packages. The owner runs them (checklist steps 6 and 10)                                                                                   |
+
+## Notes for later phases
+
+- Phase 4: the policy of each tenant table must use `nullif(current_setting('app.org_id', true), '')::uuid`
+  (refer to `docs/architecture/database.md`).
+- Phase 4 or 6: server-side calls from the web and admin apps come from one IP (the Next.js server).
+  The rate limit for each IP counts them together. Phase 4 adds limits for each user. Decide then if
+  the server-side calls need a different key.
 
 ## Manual test checklist (owner)
 
-To be completed after the build.
+Prerequisites: Docker Desktop runs. Your `.env` from Phase 1 exists. You can open the Neon console.
+
+1. **Get the branch**
+   - [ ] Run `git fetch origin` and `git checkout phase-02-api-foundation`.
+   - [ ] Run `pnpm install`.
+2. **Database URLs** (the owner actions above)
+   - [ ] Run `openssl rand -hex 24`. Keep the value.
+   - [ ] In `.env`, set `DATABASE_URL` to the **pooled** string of the `dev` branch, with the user
+         `app_user` and the new password:
+         `postgresql://app_user:<password>@<host>-pooler.<region>.aws.neon.tech/neondb?sslmode=require`.
+   - [ ] In `.env`, set `DATABASE_MIGRATION_URL` to the **direct** owner string of the `dev` branch.
+   - [ ] Add `TRUST_PROXY_HOPS=0`, `RATE_LIMIT_MAX=300` and `RATE_LIMIT_WINDOW_MS=60000` (refer to `.env.example`).
+3. **Migrations**
+   - [ ] Run `pnpm --filter @repo/api db:migrate`. Expect `migrations applied` and
+         `password of app_user set from DATABASE_URL`. Expect no warning.
+   - [ ] Run it a second time. Expect the same lines and no error.
+   - [ ] In the Neon SQL editor (branch `dev`), run
+         `select rolname, rolsuper, rolbypassrls, rolcreatedb from pg_roles where rolname = 'app_user';`.
+         Expect one row with `f`, `f`, `f`.
+4. **Checks**
+   - [ ] Run `pnpm check`. Expect all tasks to pass.
+   - [ ] Run `pnpm build`. Expect all tasks to pass.
+5. **Integration tests**
+   - [ ] Run `pnpm test:integration`. Expect 12 passed tests.
+   - [ ] Wait 15 s. Run `docker ps`. Expect no `postgres`, `redis` or `ryuk` container from the test.
+   - [ ] Add `NEON_API_KEY` and `NEON_PROJECT_ID` to `.env`. Run `pnpm test:neon`. Expect 12 passed tests.
+   - [ ] In the Neon console, open Branches. Expect no `ci-test-*` branch.
+   - [ ] Optional: run `pnpm test:neon` again and press Ctrl+C when you see "making a neon test database".
+         Wait 30 s. Expect no new `ci-test-*` branch in the Neon console (if one stays, the next run deletes it after 2 hours).
+6. **Docker Compose**
+   - [ ] Run `docker compose down`, then `docker compose up --build`.
+   - [ ] Run `docker compose ps -a`. Expect `migrate` with "Exited (0)", and `redis` (healthy), `api`,
+         `worker`, `web` and `admin` running.
+   - [ ] Run `docker compose logs migrate`. Expect `migrations applied`. Expect no password and no URL.
+7. **Health**
+   - [ ] Open http://localhost:4000/health/ready. Expect `{"status":"ok","checks":{"database":"ok","redis":"ok"}}`.
+   - [ ] Run `docker compose stop redis`. Refresh. Expect status 503 and `"redis":"fail"`, with no error text.
+   - [ ] Run `docker compose start redis`. Refresh after some seconds. Expect `ok` again.
+   - [ ] Open http://localhost:3000 and http://localhost:3001. Expect the API status **up**.
+8. **Security requests**
+   - [ ] Run each request in `docs/api/requests/security.http` and `docs/api/requests/health.http`.
+         Each request has its expected result in the comment above it.
+   - [ ] Rate limit: set `RATE_LIMIT_MAX=3` in `.env`, run `docker compose up -d --force-recreate api`,
+         and send `GET /health/ready` 4 times. Expect 429 `RATE_LIMITED` with `Retry-After` on the 4th.
+         Set the value back to 300 and recreate `api` again.
+9. **API reference and logs**
+   - [ ] Open http://localhost:4000/reference/. Expect the reference page with the two health routes.
+         Open the browser console. Expect no Content Security Policy error.
+   - [ ] Open http://localhost:4000/health/live?token=abc123. Run `docker compose logs api | grep abc123`.
+         Expect no result.
+10. **Production image**
+    - [ ] Run `docker build -f apps/api/Dockerfile -t api-prod .`. Expect success.
+    - [ ] Run `docker run --rm --env-file .env -e NODE_ENV=production api-prod node dist/migrate.js`.
+          Expect `migrations applied` (the image contains the `drizzle` folder).
+11. **Docs**
+    - [ ] Read `docs/architecture/database.md`, `docs/architecture/security.md` and `docs/api/README.md`.
+          Tell me where the text is not clear.
+12. **Shut down**
+    - [ ] Run `docker compose down`.
 
 ## Sign-off
 

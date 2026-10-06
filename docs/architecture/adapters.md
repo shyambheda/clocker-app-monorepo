@@ -12,13 +12,14 @@ Each external service has one adapter module. Refer to decision [0010](../decisi
 
 ## Adapters
 
-| Service        | Module                  | Functions for the other code (target)                      | Default provider             | Built in |
-| -------------- | ----------------------- | ---------------------------------------------------------- | ---------------------------- | -------- |
-| Database       | `apps/api/src/db/`      | `db` (Drizzle), `withTenant(orgId, fn)`, `ping()`          | Neon through the `pg` driver | Phase 2  |
-| Test databases | `apps/api/test/db/`     | `create()`, `destroy()`                                    | Local Postgres + Neon branch | Phase 2  |
-| Email          | `apps/api/src/email/`   | `sendEmail(message)`                                       | Resend, console in dev       | Phase 3  |
-| Billing        | `apps/api/src/billing/` | `createCheckout()`, `getSubscription()`, `verifyWebhook()` | Lemon Squeezy                | Phase 5  |
-| Storage        | `apps/api/src/storage/` | `put()`, `getUploadUrl()`, `getDownloadUrl()`, `delete()`  | Neon storage                 | Later    |
+| Service        | Module                  | Functions for the other code (target)                                                       | Default provider             | Built in       |
+| -------------- | ----------------------- | ------------------------------------------------------------------------------------------- | ---------------------------- | -------------- |
+| Database       | `apps/api/src/db/`      | `createDb(url)` gives `{ db, ping, close }`, `withTenant(db, orgId, fn)`, `runMigrations()` | Neon through the `pg` driver | Phase 2 (done) |
+| Redis          | `apps/api/src/redis/`   | `createRedis(url)` gives `{ connection, ping, close }`                                      | Redis (ioredis)              | Phase 2 (done) |
+| Test databases | `apps/api/test/db/`     | `create()`, `destroy()`                                                                     | Local Postgres + Neon branch | Phase 2 (done) |
+| Email          | `apps/api/src/email/`   | `sendEmail(message)`                                                                        | Resend, console in dev       | Phase 3        |
+| Billing        | `apps/api/src/billing/` | `createCheckout()`, `getSubscription()`, `verifyWebhook()`                                  | Lemon Squeezy                | Phase 5        |
+| Storage        | `apps/api/src/storage/` | `put()`, `getUploadUrl()`, `getDownloadUrl()`, `delete()`                                   | Neon storage                 | Later          |
 
 The function names are targets. The phase that builds an adapter writes its final functions on this page.
 
@@ -43,6 +44,26 @@ The function names are targets. The phase that builds an adapter writes its fina
 - Select the provider with an env variable of the adapter.
 - Add the new env variables to `.env.example` and to `apps/api/src/config/env.ts`.
 
+## Database adapter (Phase 2)
+
+| Function                    | File                 | What it does                                                        |
+| --------------------------- | -------------------- | ------------------------------------------------------------------- |
+| `createDb(url, options)`    | `src/db/client.ts`   | Makes the pool (max 10, connect timeout 5 s, idle 30 s) and Drizzle |
+| `db`                        | (from `createDb`)    | The Drizzle query builder. Tenant data goes through `withTenant`    |
+| `ping(timeoutMs)`           | (from `createDb`)    | Runs `SELECT 1` with a timeout. The ready check uses it             |
+| `close()`                   | (from `createDb`)    | Closes the pool                                                     |
+| `withTenant(db, orgId, fn)` | `src/db/tenant.ts`   | Runs `fn` in a transaction with `app.org_id` set                    |
+| `runMigrations(options)`    | `src/db/migrator.ts` | Applies the migrations and sets the `app_user` password             |
+
+Only `src/db/client.ts` imports `pg`. The adapter does not give the `pg` pool to other code.
+
+## Redis adapter (Phase 2)
+
+`createRedis(url, { profile, onError })` in `src/redis/client.ts` is the only place that makes an
+ioredis connection. It gives `connection` (for libraries that need it: the rate limit store, BullMQ in
+Phase 3), `ping(timeoutMs)` and `close()`. The `http` profile fails a command fast when Redis is not
+available. The `worker` profile waits for the connection (BullMQ needs this).
+
 ## Status
 
-No adapter exists yet. Phase 2 builds the database adapter and the test database adapter.
+Phase 2 built the database adapter, the Redis adapter and the test database adapter.

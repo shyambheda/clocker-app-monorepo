@@ -3,5 +3,9 @@
 ### Liveness: expect 200 and {"status":"ok","time":"...Z"}
 GET {{baseUrl}}/health/live
 
-### Unknown route: expect 404
+### Readiness: expect 200 and {"status":"ok","checks":{"database":"ok","redis":"ok"}}
+# Stop Redis (docker compose stop redis) and send it again: expect 503 and "redis":"fail".
+GET {{baseUrl}}/health/ready
+
+### Unknown route: expect 404 and {"error":{"code":"NOT_FOUND",...}}
 GET {{baseUrl}}/does-not-exist

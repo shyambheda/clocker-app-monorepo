@@ -43,7 +43,10 @@ Do not rename the `@repo/*` packages. Then the merges from the starter have fewe
 ## 3. Make the services
 
 1. Neon: make a project in the region of your users. Make the branch `dev` from `main`.
-   Put the connection strings in `.env` (refer to `.env.example`).
+   Put the connection strings in `.env` (refer to `.env.example`). For `DATABASE_URL`, use the user
+   `app_user` and a new password (`openssl rand -hex 24`). Then run
+   `pnpm --filter @repo/api db:migrate`. The script makes `app_user` and sets its password.
+   Refer to [architecture/database.md](architecture/database.md).
 2. Resend (Phase 3): verify the sending domain `mail.acme.com`.
 3. Lemon Squeezy (Phase 5): make a store and an API key.
 4. Railway: make the services. Refer to [deploy/railway.md](deploy/railway.md).

@@ -95,6 +95,15 @@ Technical names and technical verbs in this repository. Each word has one meanin
 | instant           | One point in time, stored in UTC                                                     |
 | zone              | An IANA time zone name, for example `Asia/Kolkata`                                   |
 | effective zone    | The zone that a user sees: the user override, else the org zone, else UTC            |
+| origin            | The scheme, host and port of a web page, for example `https://app.example.com`       |
+| allowlist         | A list of the values that the API accepts. The API rejects all other values          |
+| preflight         | The `OPTIONS` request that a browser sends before a cross-origin request             |
+| liveness check    | `GET /health/live`: the process runs. It does not check dependencies                 |
+| readiness check   | `GET /health/ready`: the process can serve traffic (database and Redis answer)       |
+| RLS               | Row Level Security. A Postgres policy that limits the rows that a role can see       |
+| owner role        | The database role that owns the schema and runs the migrations                       |
+| pooled connection | A connection through the Neon connection pooler (the host contains `-pooler`)        |
+| request id        | A UUID that the API gives to each request. It is in the log and in each response     |
 
 ### Technical verbs
 
